@@ -1,4 +1,12 @@
 <?php
+/**
+ * EDITED, HACKED, WHATEVER by FRED BRADLEY http://github.com/fredbradley - an improvment on Version 2.0.4 
+ * This edit removes the need to have to use the 'title attribute' for the implementation of this feature.
+ * 
+ * Edited: August 7th 2014
+ * */
+
+
 
 /**
  * Class Name: wp_bootstrap_navwalker
@@ -23,6 +31,16 @@ class wp_bootstrap_navwalker extends Walker_Nav_Menu {
 		$indent = str_repeat( "\t", $depth );
 		$output .= "\n$indent<ul role=\"menu\" class=\" dropdown-menu\">\n";
 	}
+
+
+	/**
+	 * This function added by hack by Fred Bradley
+	 * Function for the Array Filter in '$this->start_el'
+	 */
+	public function myFilter($string) {
+		return strpos($string, 'dead-fa-') === false;
+	}
+
 
 	/**
 	 * @see Walker::start_el()
@@ -59,9 +77,25 @@ class wp_bootstrap_navwalker extends Walker_Nav_Menu {
 
 			$classes = empty( $item->classes ) ? array() : (array) $item->classes;
 			$classes[] = 'menu-item-' . $item->ID;
-
+			
 			$class_names = join( ' ', apply_filters( 'nav_menu_css_class', array_filter( $classes ), $item, $args ) );
+			
+			/**** START HACK *****/
+				
+			$class_names = str_replace("fa-", "dead-fa-", $class_names);
+			
+			$class_names = explode(" ", $class_names);
 
+			foreach($class_names as $key => $one) {
+				if( strpos($one, 'dead-fa-')  )
+					unset($class_names[$key]);
+			}
+			$newArray = array_filter($class_names, array($this, 'myFilter'));
+
+			$class_names = implode(" ", $newArray);
+			
+			/**** END HACK *******/
+			
 			if ( $args->has_children )
 				$class_names .= ' dropdown';
 
@@ -109,11 +143,17 @@ class wp_bootstrap_navwalker extends Walker_Nav_Menu {
 			 * if there is a value in the attr_title property. If the attr_title
 			 * property is NOT null we apply it as the class name for the glyphicon.
 			 */
-			if ( ! empty( $item->attr_title ) )
-				$item_output .= '<a'. $attributes .'><span class="glyphicon ' . esc_attr( $item->attr_title ) . '"></span>&nbsp;';
+			 
+			 /* START HACK */
+			 
+			 $item_classes = $item->classes;
+			 $fa_classes = $item_classes[0];
+			if ( ! empty( $fa_classes ) )
+				$item_output .= '<a'. $attributes .'><i class="fa ' . esc_attr( $fa_classes ) . '"></i>&nbsp;';
 			else
 				$item_output .= '<a'. $attributes .'>';
-
+				/* END HACK */
+				
 			$item_output .= $args->link_before . apply_filters( 'the_title', $item->title, $item->ID ) . $args->link_after;
 			$item_output .= ( $args->has_children && 0 === $depth ) ? ' <span class="caret"></span></a>' : '</a>';
 			$item_output .= $args->after;
